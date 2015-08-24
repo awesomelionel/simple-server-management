@@ -1,0 +1,22 @@
+---
+- hosts: web
+  roles:
+    - role: jdauphant.nginx
+      nginx_http_params:
+        - sendfile on
+        - access_log /var/log/nginx/access.log
+      nginx_sites:
+        foo:
+          - listen 8080
+          - server_name localhost
+          - root /tmp/site1
+          - location / { try_files $uri $uri/ /index.html; }
+          - location /images/ { try_files $uri $uri/ /index.html; }
+      nginx_configs:
+        proxy:
+          - proxy_set_header X-Real-IP  $remote_addr
+          - proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for
+    - role: geerlingguy.ruby
+      ruby_install_from_source: true
+      ruby_download_url: http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.1.tar.gz
+      ruby_version: 2.2.1

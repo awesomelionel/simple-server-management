@@ -1,0 +1,11 @@
+    - hosts: web
+      tasks:
+        - name: Update apt cache
+          apt: update_cache=true
+
+        - name: Install some basic packages
+          apt: pkg={{ item }} state=latest
+          with_items:
+            - vim
+            - git
+
