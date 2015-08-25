@@ -1,4 +1,6 @@
     - hosts: web
+      vars:
+        - deploy_password: 12345678
       tasks:
         - name: Update apt cache
           apt: update_cache=true
@@ -8,4 +10,36 @@
           with_items:
             - vim
             - git
+            - fail2ban
+            - tree
+            - htop
 
+        - name: Add deployment user
+          action: user name=deploy password=$deploy_password
+
+        - name: Remove sudo group rights
+          action: lineinfile dest=/etc/sudoers regexp="^%sudo" state=absent
+
+        - name: Add deploy user to sudoers
+          action: lineinfile dest=/etc/sudoers regexp="deploy ALL" line="deploy ALL=(ALL) ALL" state=present
+
+        - name: Disallow root SSH access
+          action: lineinfile dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
+          notify: Restart sshd
+
+        - name: Disallow password authentication
+          action: lineinfile dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+          notify: Restart sshd
+
+        - name: Install unattended-upgrades
+          action: apt pkg=unattended-upgrades state=present
+        
+        - name: Adjust APT update intervals
+          action: copy src=files/apt_periodic dest=/etc/apt/apt.conf.d/10periodic
+
+        - name: Make sure unattended-upgrades only installs from $ubuntu_release-security
+          action: lineinfile dest=/etc/apt/apt.conf.d/50unattended-upgrades regexp="$ubuntu_release-updates" state=absent
+
+      handlers:
+        - name: Restart sshd
+          action: service name=sshd state=restarted
