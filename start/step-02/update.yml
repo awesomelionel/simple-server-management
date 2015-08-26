@@ -25,11 +25,11 @@
 
         - name: Disallow root SSH access
           action: lineinfile dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin no" state=present
-          notify: Restart sshd
+          notify: Restart ssh
 
         - name: Disallow password authentication
           action: lineinfile dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
-          notify: Restart sshd
+          notify: Restart ssh
 
         - name: Install unattended-upgrades
           action: apt pkg=unattended-upgrades state=present
@@ -41,5 +41,5 @@
           action: lineinfile dest=/etc/apt/apt.conf.d/50unattended-upgrades regexp="$ubuntu_release-updates" state=absent
 
       handlers:
-        - name: Restart sshd
-          action: service name=sshd state=restarted
+        - name: Restart ssh
+          action: service name=ssh state=restarted
